@@ -6,6 +6,8 @@ This is an attempt to recreate a similar experience to games such as You Don't K
 The primary purpose is as a learning experience for creating this type of game, but it
 should also be fun to play.
 
+A hosted version of this repository can be found at: [dunnohack-opentdb.web.app](https://dunnohack-opentdb.web.app)
+
 # TODO
 
 * [ ] Basic UI for starting and playing a game
