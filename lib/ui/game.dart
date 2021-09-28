@@ -1,8 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:dunno_hack/api.dart';
 import 'package:dunno_hack/extensions.dart';
 import 'package:dunno_hack/models/question.dart';
-import 'package:flutter/material.dart';
-
-import '../api.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -17,6 +16,7 @@ class _GameScreenState extends State<GameScreen> {
   int _currentQuestion = 0;
   int? _userAnswer;
   int _score = 0;
+  Object? _error;
 
   @override
   void initState() {
@@ -25,14 +25,23 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _startGame() async {
-    _questions = null;
-    _score = 0;
-    _userAnswer = null;
-    final questions = await Api.loadQuestions();
     setState(() {
-      _questions = questions;
-      _currentQuestion = 0;
+      _questions = null;
+      _score = 0;
+      _userAnswer = null;
+      _error = null;
     });
+    try {
+      final questions = await Api.loadQuestions();
+      setState(() {
+        _questions = questions;
+        _currentQuestion = 0;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e;
+      });
+    }
   }
 
   void _submitAnswer(int answer) async {
@@ -55,12 +64,50 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     Widget body;
     final questions = _questions;
-    if (questions == null) {
+    if (_error != null) {
+      body = Column(children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text("Error: $_error"),
+        ),
+        MaterialButton(
+          onPressed: () {
+            _startGame();
+          },
+          color: context.theme.errorColor,
+          textColor: Colors.white,
+          child: const Text("Retry"),
+        )
+      ]);
+    } else if (questions == null) {
       // Loading questions
       body = const CircularProgressIndicator();
     } else if (_currentQuestion >= questions.length) {
       // Game complete
-      body = Text('Score: $_score / 10');
+      body = Center(
+          child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Text(
+              'Score:\n$_score / ${questions.length}',
+              textScaleFactor: 3,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          MaterialButton(
+            onPressed: () {
+              _startGame();
+            },
+            color: context.theme.primaryColor,
+            textColor: Colors.white,
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text("Play Again", textScaleFactor: 3),
+            ),
+          )
+        ],
+      ));
     } else {
       // Showing a question
       final question = questions[_currentQuestion];
@@ -69,7 +116,12 @@ class _GameScreenState extends State<GameScreen> {
           itemBuilder: (context, index) {
             final answerIndex = index - 1;
             if (answerIndex < 0) {
-              return Text(question.question);
+              return Center(
+                  child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(question.question,
+                    textScaleFactor: 2, textAlign: TextAlign.center),
+              ));
             } else {
               final buttonEnabled = _userAnswer == null;
               final Color color;
@@ -83,12 +135,15 @@ class _GameScreenState extends State<GameScreen> {
                 // Highlight incorrect answer if applicable
                 color = Colors.redAccent;
               } else {
-                color = Colors.grey;
+                color = Colors.grey.shade300;
               }
               return MaterialButton(
                 onPressed: () =>
                     buttonEnabled ? _submitAnswer(index - 1) : null,
-                child: Text(question.answers[index - 1]),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(question.answers[index - 1], textScaleFactor: 2),
+                ),
                 color: color,
               );
             }
@@ -98,7 +153,7 @@ class _GameScreenState extends State<GameScreen> {
       appBar: AppBar(
         title: Text(context.appTitle),
       ),
-      body: body,
+      body: Center(child: body),
     );
   }
 }

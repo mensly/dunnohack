@@ -14,8 +14,11 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("Play trivia by yourself or with friends using questions from Open Trivia Database"),
+              padding: EdgeInsets.all(32.0),
+              child: Text("Play trivia by yourself or with friends using questions from Open Trivia Database",
+                textScaleFactor: 2,
+                textAlign: TextAlign.center,
+              ),
             ),
             MaterialButton(
               onPressed: () {
@@ -24,8 +27,8 @@ class HomeScreen extends StatelessWidget {
               color: context.theme.primaryColor,
               textColor: Colors.white,
               child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text("Single Player"),
+                padding: EdgeInsets.all(16.0),
+                child: Text("Single Player", textScaleFactor: 3),
               ),
             )
           ],
