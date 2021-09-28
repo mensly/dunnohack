@@ -10,10 +10,10 @@ A hosted version of this repository can be found at: [dunnohack-opentdb.web.app]
 
 # TODO
 
-* [ ] Basic UI for starting and playing a game
-* [ ] Load questions from API
-* [ ] Prompt user for answers
-* [ ] Show summary of result
+* [x] Basic UI for starting and playing a game
+* [x] Load questions from API
+* [x] Prompt user for answers
+* [x] Show summary of result
 * [ ] Host online game, generating a code
 * [ ] Join online game with code and name
 * [ ] Minimal interface for joining game (ie on a phone when host is on screen)
