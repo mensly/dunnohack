@@ -1,3 +1,4 @@
+const cors = require('cors')({origin: true});
 const admin = require("firebase-admin");
 const functions = require("firebase-functions");
 admin.initializeApp(functions.config().firebase);
@@ -27,12 +28,16 @@ async function isOccupied(code) {
 }
 
 exports.startGame = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+
   let code;
   do {
     code = generateCode();
   } while (await isOccupied(code));
   await db.collection("games")
-      .doc(code)
-      .set({host: req.body.hostId, lastAlive: Date.now()});
+    .doc(code)
+    .set({host: req.body.hostId, lastAlive: Date.now()});
   res.json({code: code});
+
+  });
 });

@@ -20,15 +20,32 @@ class HomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            MaterialButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed("/game");
-              },
-              color: context.theme.primaryColor,
-              textColor: Colors.white,
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text("Single Player", textScaleFactor: 3),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: MaterialButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed("/game");
+                },
+                color: context.theme.primaryColor,
+                textColor: Colors.white,
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text("Single Player", textScaleFactor: 3),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: MaterialButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed("/host");
+                },
+                color: context.theme.primaryColor,
+                textColor: Colors.white,
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text("Host Game", textScaleFactor: 3),
+                ),
               ),
             )
           ],
