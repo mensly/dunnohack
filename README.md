@@ -14,7 +14,6 @@ A hosted version of this repository can be found at: [dunnohack-opentdb.web.app]
 * [x] Load questions from API
 * [x] Prompt user for answers
 * [x] Show summary of result
-* [ ] Host online game, generating a code
-* [ ] Join online game with code and name
-* [ ] Minimal interface for joining game (ie on a phone when host is on screen)
+* [x] Host online game, generating a code
+* [x] Join online game with code and name
 * [ ] UI for configuring question count, difficulty, category

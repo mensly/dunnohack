@@ -19,6 +19,8 @@ class _HostScreenState extends State<HostScreen> {
   Object? _error;
   int? _currentQuestion;
   Stream<QuerySnapshot>? _players;
+  final Map<String, int> _scores = {};
+  List<String>? _scoresDisplay;
 
   @override
   void initState() {
@@ -31,13 +33,19 @@ class _HostScreenState extends State<HostScreen> {
       _questions = null;
       _currentQuestion = null;
       _error = null;
+      _scores.clear();
+      _scoresDisplay = null;
     });
     try {
       final userCredential = await FirebaseAuth.instance.signInAnonymously();
       final code = await Api.startGame(userCredential.user!.uid);
       setState(() {
         _code = code;
-        _players = FirebaseFirestore.instance.collection('games').doc(code).collection('players').snapshots();
+        _players = FirebaseFirestore.instance
+            .collection('games')
+            .doc(code)
+            .collection('players')
+            .snapshots();
       });
       final questions = await Api.loadQuestions();
       setState(() {
@@ -52,11 +60,11 @@ class _HostScreenState extends State<HostScreen> {
 
   void _nextQuestion() async {
     final currentQuestion = (_currentQuestion ?? -1) + 1;
-    setState(() {
-      _currentQuestion = currentQuestion;
-    });
     final questions = _questions;
     if (questions != null && currentQuestion < questions.length) {
+      setState(() {
+        _currentQuestion = currentQuestion;
+      });
       final gameRef = FirebaseFirestore.instance.collection('games').doc(_code);
       final playersRef = gameRef.collection('players');
       final players = await playersRef.get();
@@ -66,17 +74,38 @@ class _HostScreenState extends State<HostScreen> {
       await gameRef.update({'answers': questions[currentQuestion].answers});
       final playerIds = players.docs.map((e) => e.id);
       // Wait for all player answers
-      await Rx.combineLatest(playerIds.map((id) => playersRef.doc(id).snapshots()), (players) =>
-        players.every((element) => (element as DocumentSnapshot).get('input') != null)
-      ).firstWhere((element) => element);
-      // TODO: Increment scores where appropriate
+      await Rx.combineLatest(
+              playerIds.map((id) => playersRef.doc(id).snapshots()),
+              (players) => players.every((element) =>
+                  (element as DocumentSnapshot).get('input') != null))
+          .firstWhere((element) => element);
+      for (final id in playerIds) {
+        final player = await playersRef.doc(id).get();
+        if (player.get('input') == questions[currentQuestion].correctIndex) {
+          _scores[id] = (_scores[id] ?? 0) + 1;
+        } else if (_scores[id] == null) {
+          _scores[id] = 0;
+        }
+      }
       _nextQuestion();
+    } else {
+      final scores = _scores.entries.toList();
+      scores.sort((a, b) => -a.value.compareTo(b.value));
+      final gameRef = FirebaseFirestore.instance.collection('games').doc(_code);
+      final playersRef = gameRef.collection('players');
+      final players = await playersRef.get();
+      setState(() {
+        _currentQuestion = currentQuestion;
+        _scoresDisplay = scores
+            .map((entry) =>
+        '${players.docs.firstWhere((element) => element.id == entry.key).get('name')}: ${entry.value}')
+            .toList();
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     Widget body;
     final questions = _questions;
     final currentQuestion = _currentQuestion;
@@ -103,27 +132,35 @@ class _HostScreenState extends State<HostScreen> {
             textScaleFactor: 3, textAlign: TextAlign.center);
       } else {
         // Show results
-        body = const Text("Scores:");
+        body = Column(
+            children: [const Text("Scores:")] +
+                (_scoresDisplay?.map((e) => Text(e)).toList() ?? List.empty()));
       }
     } else if (code != null && players != null) {
       body = StreamBuilder<QuerySnapshot>(
           stream: players,
-          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          builder:
+              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             final players = snapshot.data?.docs ?? List.empty();
             final startEnabled = questions != null && players.isNotEmpty;
             final List<Widget> header = [
               Text(code, textScaleFactor: 4),
               const Text("Players:")
             ];
-            final List<Widget> playerNames = players.map((e) => Text(e.get('name'))).toList();
+            final List<Widget> playerNames =
+                players.map((e) => Text(e.get('name'))).toList();
             final List<Widget> footer = [
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: MaterialButton(
-                  onPressed: startEnabled ? () {
-                    _nextQuestion();
-                  } : null,
-                  color: startEnabled ? context.theme.primaryColor : Colors.grey.shade300,
+                  onPressed: startEnabled
+                      ? () {
+                          _nextQuestion();
+                        }
+                      : null,
+                  color: startEnabled
+                      ? context.theme.primaryColor
+                      : Colors.grey.shade300,
                   textColor: Colors.white,
                   child: const Padding(
                     padding: EdgeInsets.all(16.0),
@@ -135,8 +172,7 @@ class _HostScreenState extends State<HostScreen> {
             return Column(
               children: header + playerNames + footer,
             );
-          }
-        );
+          });
     } else {
       // Loading questions and code
       body = const CircularProgressIndicator();
@@ -148,5 +184,4 @@ class _HostScreenState extends State<HostScreen> {
       body: Center(child: body),
     );
   }
-
 }
