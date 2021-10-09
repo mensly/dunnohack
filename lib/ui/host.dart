@@ -94,6 +94,7 @@ class _HostScreenState extends State<HostScreen> {
       final gameRef = FirebaseFirestore.instance.collection('games').doc(_code);
       final playersRef = gameRef.collection('players');
       final players = await playersRef.get();
+      await gameRef.update({'answers': []});
       setState(() {
         _currentQuestion = currentQuestion;
         _scoresDisplay = scores

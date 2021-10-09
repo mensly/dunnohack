@@ -34,7 +34,6 @@ class Api {
         'hostId': uid,
       }),
     );
-    print(response);
     return jsonDecode(response.body)['code'];
   }
 }

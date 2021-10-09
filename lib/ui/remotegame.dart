@@ -17,6 +17,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   String? _playerId;
   DocumentReference? _gameRef;
   Stream<DocumentSnapshot>? _game;
+  Stream<DocumentSnapshot>? _player;
 
   void _connect(String code, String name) async {
     setState(() {
@@ -34,14 +35,14 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
       });
       return;
     }
-    await gameRef.collection('players')
-        .doc(playerId)
-        .set({'name': name});
+    final playerRef = gameRef.collection('players').doc(playerId);
+    await playerRef.set({'name': name, 'input': null});
     setState(() {
       _gameRef = gameRef;
       _connecting = false;
       _playerId = playerId;
       _game = gameRef.snapshots();
+      _player = playerRef.snapshots();
     });
   }
 
@@ -56,11 +57,10 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   @override
   Widget build(BuildContext context) {
     Widget body;
-    final game = _game;
     if (_connecting) {
       // Loading questions
       body = const CircularProgressIndicator();
-    } else if (game == null) {
+    } else if (_game == null) {
       body = Column(
         children: [
           const Text("Code:"),
@@ -86,11 +86,14 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
       );
     } else {
       body = StreamBuilder<DocumentSnapshot>(
-          stream: game,
-          builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-            List<String> answers = snapshot.hasData ? List.castFrom(snapshot.data!.get('answers')) : List.empty();
-            // final playerAnswer = snapshot.data?.get('players');//.get(_playerId).get('input');
-            if (answers.isNotEmpty) {
+          stream: _game,
+          builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> gameSnapshot) => StreamBuilder<DocumentSnapshot>(
+              stream: _player,
+              builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> playerSnapshot) {
+            List<String> answers = gameSnapshot.hasData ? List.castFrom(gameSnapshot.data!.get('answers')) : List.empty();
+            // return Text(playerSnapshot.data?.data()?.toString() ?? "");
+            final playerAnswered = playerSnapshot.hasData && playerSnapshot.data!.get('input') != null;
+            if (answers.isNotEmpty && !playerAnswered) {
               return ListView.builder(
                   itemCount: answers.length,
                   itemBuilder: (context, index) {
@@ -105,9 +108,10 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                     }
                   );
             } else {
-              return const Text('WAITING');
+              return const Text('…', textScaleFactor: 10,);
             }
-          });
+          })
+      );
     }
     return Scaffold(
       appBar: AppBar(
