@@ -52,8 +52,8 @@ class _HostScreenState extends State<HostScreen> {
       _questions = null;
     });
     try {
-      final questions = await Api.loadQuestions(
-          category: _category, difficulty: _difficulty);
+      final questions =
+          await Api.loadQuestions(category: _category, difficulty: _difficulty);
       setState(() {
         _questions = questions;
       });
@@ -104,7 +104,10 @@ class _HostScreenState extends State<HostScreen> {
       for (final player in players.docs) {
         await playersRef.doc(player.id).update({'input': null});
       }
-      await gameRef.update({'answers': questions[currentQuestion].answers});
+      await gameRef.update({
+        'answers': questions[currentQuestion].answers,
+        'lastAlive': DateTime.now().millisecondsSinceEpoch
+      });
       final playerIds = players.docs.map((e) => e.id);
       // Wait for all player answers
       await Rx.combineLatest(
@@ -208,8 +211,9 @@ class _HostScreenState extends State<HostScreen> {
                 value: _difficulty,
                 items: _difficulties
                     .map((difficulty) => DropdownMenuItem(
-                    value: difficulty,
-                    child: Text(difficulty?.toLabelString() ?? "Any Difficulty")))
+                        value: difficulty,
+                        child: Text(
+                            difficulty?.toLabelString() ?? "Any Difficulty")))
                     .toList(),
                 onChanged: (Difficulty? newValue) {
                   setState(() {
@@ -222,8 +226,8 @@ class _HostScreenState extends State<HostScreen> {
                 value: _category,
                 items: _categories
                     .map((category) => DropdownMenuItem(
-                    value: category,
-                    child: Text(category?.name ?? "Any Category")))
+                        value: category,
+                        child: Text(category?.name ?? "Any Category")))
                     .toList(),
                 onChanged: (Category? newValue) {
                   setState(() {
