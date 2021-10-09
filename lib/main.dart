@@ -27,7 +27,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           return MaterialApp(
-            title: 'Dunno Hack',
+            title: 'DunnoHack',
             theme: ThemeData(
               primarySwatch: Colors.teal,
             ),

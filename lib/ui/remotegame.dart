@@ -63,10 +63,22 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     } else if (_game == null) {
       body = Column(
         children: [
-          const Text("Code:"),
-          TextField(controller: _codeController),
-          const Text("Name:"),
-          TextField(controller: _nameController),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Code:", textScaleFactor: 3),
+          ),
+          SizedBox(width: 400,
+              child: TextField(controller: _codeController, style: const TextStyle(fontSize: 30), autofocus: true)
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Name:", textScaleFactor: 3),
+          ),
+          SizedBox(width: 400,
+              child: TextField(controller: _nameController, style: const TextStyle(fontSize: 30), onSubmitted: (text) =>
+                _connect(_codeController.text, _nameController.text)
+              )
+          ),
 
           Padding(
             padding: const EdgeInsets.all(8.0),

@@ -134,8 +134,14 @@ class _HostScreenState extends State<HostScreen> {
       } else {
         // Show results
         body = Column(
-            children: [const Text("Scores:")] +
-                (_scoresDisplay?.map((e) => Text(e)).toList() ?? List.empty()));
+            children: [const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Scores:", textScaleFactor: 3,),
+            )] +
+                (_scoresDisplay?.map((e) => Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(e, textScaleFactor: 4,),
+                )).toList() ?? List.empty()));
       }
     } else if (code != null && players != null) {
       body = StreamBuilder<QuerySnapshot>(
@@ -145,7 +151,7 @@ class _HostScreenState extends State<HostScreen> {
             final players = snapshot.data?.docs ?? List.empty();
             final startEnabled = questions != null && players.isNotEmpty;
             final List<Widget> header = [
-              Text(code, textScaleFactor: 4),
+              SelectableText(code, textScaleFactor: 4,),
               const Text("Players:")
             ];
             final List<Widget> playerNames =
