@@ -1,6 +1,7 @@
 import 'package:dunno_hack/ui/game.dart';
 import 'package:dunno_hack/ui/home.dart';
 import 'package:dunno_hack/ui/host.dart';
+import 'package:dunno_hack/ui/remotegame.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -36,6 +37,7 @@ class _MyAppState extends State<MyApp> {
               '/': (context) => const HomeScreen(),
               '/game': (context) => const GameScreen(),
               '/host': (context) => const HostScreen(),
+              '/player': (context) => const RemoteGameScreen(),
             },
           );
         }
