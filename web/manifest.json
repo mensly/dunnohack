@@ -1,11 +1,11 @@
 {
-    "name": "dunno_hack",
-    "short_name": "dunno_hack",
+    "name": "DunnoHack",
+    "short_name": "DunnoHack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Play trivia by yourself or with friends using questions from opentdb.com",
+    "description": "Play trivia by yourself or with friends using questions from Open Trivia Database",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

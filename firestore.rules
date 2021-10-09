@@ -2,10 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /games/{code}/{document=**} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == get(/games/$(code)).data.host;
     }
-    match /games/{code}/players/{playerId}/{document=**} {
+    match /games/{code}/players/{playerId}/name {
+      allow write: if request.auth != null && request.auth.uid == playerId;
+    }
+    match /games/{code}/players/{playerId}/input {
       allow write: if request.auth != null && request.auth.uid == playerId;
     }
   }

@@ -47,6 +47,20 @@ class HomeScreen extends StatelessWidget {
                   child: Text("Host Game", textScaleFactor: 3),
                 ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: MaterialButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed("/player");
+                },
+                color: context.theme.primaryColor,
+                textColor: Colors.white,
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text("Join Game", textScaleFactor: 3),
+                ),
+              ),
             )
           ],
         ),
