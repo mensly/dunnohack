@@ -74,9 +74,6 @@ class _HostScreenState extends State<HostScreen> {
     }
   }
 
-  void _waitForPlayerAnswers(Iterable<String> playerIds) {
-  }
-
   @override
   Widget build(BuildContext context) {
 
