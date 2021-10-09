@@ -1,4 +1,6 @@
 import 'package:dunno_hack/api.dart';
+import 'package:dunno_hack/models/category.dart';
+import 'package:dunno_hack/models/difficulty.dart';
 import 'package:dunno_hack/models/question.dart';
 import 'package:flutter/material.dart';
 import 'package:dunno_hack/extensions.dart';
@@ -21,11 +23,45 @@ class _HostScreenState extends State<HostScreen> {
   Stream<QuerySnapshot>? _players;
   final Map<String, int> _scores = {};
   List<String>? _scoresDisplay;
+  Category? _category;
+  final List<Category?> _categories = [null];
+  Difficulty? _difficulty;
+  final List<Difficulty?> _difficulties = [
+    null,
+    Difficulty.easy,
+    Difficulty.medium,
+    Difficulty.hard
+  ];
 
   @override
   void initState() {
     super.initState();
+    _loadCategories();
     _startGame();
+  }
+
+  void _loadCategories() async {
+    final categories = await Api.loadCategories();
+    setState(() {
+      _categories.addAll(categories);
+    });
+  }
+
+  void _loadQuestions() async {
+    setState(() {
+      _questions = null;
+    });
+    try {
+      final questions = await Api.loadQuestions(
+          category: _category, difficulty: _difficulty);
+      setState(() {
+        _questions = questions;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e;
+      });
+    }
   }
 
   void _startGame() async {
@@ -47,15 +83,12 @@ class _HostScreenState extends State<HostScreen> {
             .collection('players')
             .snapshots();
       });
-      final questions = await Api.loadQuestions();
-      setState(() {
-        _questions = questions;
-      });
     } catch (e) {
       setState(() {
         _error = e;
       });
     }
+    _loadQuestions();
   }
 
   void _nextQuestion() async {
@@ -99,7 +132,7 @@ class _HostScreenState extends State<HostScreen> {
         _currentQuestion = currentQuestion;
         _scoresDisplay = scores
             .map((entry) =>
-        '${players.docs.firstWhere((element) => element.id == entry.key).get('name')}: ${entry.value}')
+                '${players.docs.firstWhere((element) => element.id == entry.key).get('name')}: ${entry.value}')
             .toList();
       });
     }
@@ -134,14 +167,25 @@ class _HostScreenState extends State<HostScreen> {
       } else {
         // Show results
         body = Column(
-            children: [const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("Scores:", textScaleFactor: 3,),
-            )] +
-                (_scoresDisplay?.map((e) => Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(e, textScaleFactor: 4,),
-                )).toList() ?? List.empty()));
+            children: [
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      "Scores:",
+                      textScaleFactor: 3,
+                    ),
+                  )
+                ] +
+                (_scoresDisplay
+                        ?.map((e) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                e,
+                                textScaleFactor: 4,
+                              ),
+                            ))
+                        .toList() ??
+                    List.empty()));
       }
     } else if (code != null && players != null) {
       body = StreamBuilder<QuerySnapshot>(
@@ -151,12 +195,43 @@ class _HostScreenState extends State<HostScreen> {
             final players = snapshot.data?.docs ?? List.empty();
             final startEnabled = questions != null && players.isNotEmpty;
             final List<Widget> header = [
-              SelectableText(code, textScaleFactor: 4,),
-              const Text("Players:")
+              SelectableText(
+                code,
+                textScaleFactor: 4,
+              ),
+              Text("Players:" + (players.isEmpty ? ' None' : ''))
             ];
             final List<Widget> playerNames =
                 players.map((e) => Text(e.get('name'))).toList();
             final List<Widget> footer = [
+              DropdownButton(
+                value: _difficulty,
+                items: _difficulties
+                    .map((difficulty) => DropdownMenuItem(
+                    value: difficulty,
+                    child: Text(difficulty?.toLabelString() ?? "Any Difficulty")))
+                    .toList(),
+                onChanged: (Difficulty? newValue) {
+                  setState(() {
+                    _difficulty = newValue;
+                  });
+                  _loadQuestions();
+                },
+              ),
+              DropdownButton(
+                value: _category,
+                items: _categories
+                    .map((category) => DropdownMenuItem(
+                    value: category,
+                    child: Text(category?.name ?? "Any Category")))
+                    .toList(),
+                onChanged: (Category? newValue) {
+                  setState(() {
+                    _category = newValue;
+                  });
+                  _loadQuestions();
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: MaterialButton(
