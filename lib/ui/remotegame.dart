@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:dunno_hack/api.dart';
 import 'package:dunno_hack/extensions.dart';
-import 'package:dunno_hack/models/question.dart';
 
 class RemoteGameScreen extends StatefulWidget {
   const RemoteGameScreen({Key? key}) : super(key: key);
@@ -17,6 +15,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   final _nameController = TextEditingController();
   var _connecting = false;
   String? _playerId;
+  DocumentReference? _gameRef;
   Stream<DocumentSnapshot>? _game;
 
   void _connect(String code, String name) async {
@@ -25,17 +24,33 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     });
     final userCredential = await FirebaseAuth.instance.signInAnonymously();
     final playerId = userCredential.user!.uid;
-    await FirebaseFirestore.instance.collection('games').doc(code).collection('players')
+    final gameRef = FirebaseFirestore.instance.collection('games').doc(code);
+    final game = await gameRef.get();
+    if (!game.exists) {
+      setState(() {
+        _codeController.clear();
+        _nameController.clear();
+        _connecting = false;
+      });
+      return;
+    }
+    await gameRef.collection('players')
         .doc(playerId)
         .set({'name': name});
     setState(() {
+      _gameRef = gameRef;
       _connecting = false;
       _playerId = playerId;
-      _game = FirebaseFirestore.instance.collection('games').doc(code).snapshots();
+      _game = gameRef.snapshots();
     });
   }
 
   void _submitAnswer(int answer) async {
+    final gameRef = _gameRef;
+    if (gameRef == null) { return; }
+    await gameRef.collection('players')
+        .doc(_playerId)
+        .update({'input': answer});
   }
 
   @override
@@ -70,34 +85,29 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
         ]
       );
     } else {
-      body = const Text('TODO');
-      // Showing a question
-      // final question = questions[_currentQuestion];
-      // body = ListView.builder(
-      //     itemCount: question.answers.length + 1,
-      //     itemBuilder: (context, index) {
-      //       final answerIndex = index - 1;
-      //       if (answerIndex < 0) {
-      //         return Center(
-      //             child: Padding(
-      //           padding: const EdgeInsets.all(16.0),
-      //           child: Text(question.question,
-      //               textScaleFactor: 2, textAlign: TextAlign.center),
-      //         ));
-      //       } else {
-      //         final buttonEnabled = _userAnswer == null;
-      //         final Color color = context.theme.primaryColorLight;
-      //         return MaterialButton(
-      //           onPressed: () =>
-      //               buttonEnabled ? _submitAnswer(index - 1) : null,
-      //           child: Padding(
-      //             padding: const EdgeInsets.all(16.0),
-      //             child: Text(question.answers[index - 1], textScaleFactor: 2),
-      //           ),
-      //           color: color,
-      //         );
-      //       }
-      //     });
+      body = StreamBuilder<DocumentSnapshot>(
+          stream: game,
+          builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+            List<String> answers = snapshot.hasData ? List.castFrom(snapshot.data!.get('answers')) : List.empty();
+            // final playerAnswer = snapshot.data?.get('players');//.get(_playerId).get('input');
+            if (answers.isNotEmpty) {
+              return ListView.builder(
+                  itemCount: answers.length,
+                  itemBuilder: (context, index) {
+                      return MaterialButton(
+                        onPressed: () => { _submitAnswer(index) },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(answers[index], textScaleFactor: 2),
+                        ),
+                        color: context.theme.primaryColorLight,
+                      );
+                    }
+                  );
+            } else {
+              return const Text('WAITING');
+            }
+          });
     }
     return Scaffold(
       appBar: AppBar(

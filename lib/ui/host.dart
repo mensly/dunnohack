@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dunno_hack/extensions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 
 class HostScreen extends StatefulWidget {
   const HostScreen({Key? key}) : super(key: key);
@@ -49,17 +50,31 @@ class _HostScreenState extends State<HostScreen> {
     }
   }
 
-  void _nextQuestion() {
+  void _nextQuestion() async {
     final currentQuestion = (_currentQuestion ?? -1) + 1;
     setState(() {
       _currentQuestion = currentQuestion;
     });
-    if (currentQuestion < (_questions?.length ?? 0)) {
-      _waitForAnswers();
+    final questions = _questions;
+    if (questions != null && currentQuestion < questions.length) {
+      final gameRef = FirebaseFirestore.instance.collection('games').doc(_code);
+      final playersRef = gameRef.collection('players');
+      final players = await playersRef.get();
+      for (final player in players.docs) {
+        await playersRef.doc(player.id).update({'input': null});
+      }
+      await gameRef.update({'answers': questions[currentQuestion].answers});
+      final playerIds = players.docs.map((e) => e.id);
+      // Wait for all player answers
+      await Rx.combineLatest(playerIds.map((id) => playersRef.doc(id).snapshots()), (players) =>
+        players.every((element) => (element as DocumentSnapshot).get('input') != null)
+      ).firstWhere((element) => element);
+      // TODO: Increment scores where appropriate
+      _nextQuestion();
     }
   }
 
-  void _waitForAnswers() {
+  void _waitForPlayerAnswers(Iterable<String> playerIds) {
   }
 
   @override

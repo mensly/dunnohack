@@ -36,7 +36,7 @@ exports.startGame = functions.https.onRequest(async (req, res) => {
   } while (await isOccupied(code));
   await db.collection("games")
     .doc(code)
-    .set({host: req.body.hostId, lastAlive: Date.now()});
+    .set({host: req.body.hostId, lastAlive: Date.now(), answers: []});
   res.json({code: code});
 
   });
