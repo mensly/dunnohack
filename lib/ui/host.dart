@@ -170,11 +170,17 @@ class _HostScreenState extends State<HostScreen> {
       });
       final playerIds = players.docs.map((e) => e.id);
       // Wait for all player answers
-      await Rx.combineLatest(
-              playerIds.map((id) => playersRef.doc(id).snapshots()),
-              (players) => players.every((element) =>
-                  (element as DocumentSnapshot).get('input') != null))
-          .firstWhere((element) => element);
+      try {
+        await Rx.combineLatest(
+            playerIds.map((id) => playersRef.doc(id).snapshots()),
+                (players) =>
+                players.every((element) =>
+                (element as DocumentSnapshot).get('input') != null))
+            .firstWhere((element) => element)
+            .timeout(const Duration(minutes: 1));
+      } catch (_) {
+        // Ignore error from timeout
+      }
       final List<String> correct = [];
       for (final id in playerIds) {
         final player = await playersRef.doc(id).get();
@@ -409,7 +415,8 @@ class _HostScreenState extends State<HostScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.appTitle),
+        title: Text(_currentQuestion == null ? context.appTitle :
+          "${context.appTitle} — Question ${_currentQuestion! + 1} of ${_questions?.length ?? 0}") ,
       ),
       body: Center(child: body),
     );

@@ -209,7 +209,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
             builder: (BuildContext context,
                 AsyncSnapshot<DocumentSnapshot> playerSnapshot) {
               final int? score = playerSnapshot.data?.get("score");
-              return Text(score == null ? context.appTitle : "${context.appTitle} - $score");
+              return Text(score == null ? context.appTitle : "${context.appTitle} — Score: $score");
             }),
         actions: _gameRef == null
             ? []
