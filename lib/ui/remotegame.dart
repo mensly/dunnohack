@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dunno_hack/extensions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RemoteGameScreen extends StatefulWidget {
   const RemoteGameScreen({Key? key}) : super(key: key);
@@ -24,7 +25,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   @override
   void initState() {
     super.initState();
-    _checkConnection();
+    _initStateAsync();
   }
 
   @override
@@ -33,7 +34,12 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     super.dispose();
   }
 
-  void _checkConnection() async {
+  void _initStateAsync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('name');
+    if (name != null && name.isNotEmpty) {
+      _nameController.text = name;
+    }
     while (_active) {
       final gameRef = _gameRef;
       if (gameRef != null) {
@@ -81,6 +87,8 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     }
     final playerRef = gameRef.collection('players').doc(playerId);
     await playerRef.set({'name': name, 'input': null, 'score': null});
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('name', name);
     setState(() {
       _gameRef = gameRef;
       _connecting = false;
@@ -188,7 +196,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                           answers.isNotEmpty ? "players" : "host";
                       return Text(
                         'Waiting for\n$waitingFor…',
-                        textScaleFactor: 10,
+                        textScaleFactor: 5,
                         textAlign: TextAlign.center,
                       );
                     }

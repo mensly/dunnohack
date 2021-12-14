@@ -13,14 +13,15 @@ A hosted version of this repository can be found at: [trivia.mens.ly](https://tr
 * [x] show url for input
 * [x] better UI for waiting
 * [x] input validation
+* [*] remember name
 * [ ] Session rejoin
 * [ ] Host remove players during setup
 * [ ] Show who we're waiting on
 * [ ] Timeout for answering
 * [ ] Show how many questions you're on
-* [ ] Show correct answer after everyone answers
+* [x] Show correct answer after everyone answers
 * [x] Show points as you go
-* [ ] Show who answered what
+* [x] Show who answered correctly
 * [x] Custom question json
 * [ ] Single player config
 * [x] GitHub link

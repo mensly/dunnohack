@@ -20,6 +20,7 @@ class _HostScreenState extends State<HostScreen> {
   List<Question>? _questions;
   List<Question>? _newQuestions;
   var _customQuestions = false;
+  List<String>? _showCorrect = null;
   String? _code;
   Object? _error;
   int? _currentQuestion;
@@ -174,15 +175,26 @@ class _HostScreenState extends State<HostScreen> {
               (players) => players.every((element) =>
                   (element as DocumentSnapshot).get('input') != null))
           .firstWhere((element) => element);
+      final List<String> correct = [];
       for (final id in playerIds) {
         final player = await playersRef.doc(id).get();
         if (player.get('input') == questions[currentQuestion].correctIndex) {
           _scores[id] = (_scores[id] ?? 0) + 1;
+          final String name = player.get('name');
+          correct.add(name);
         } else if (_scores[id] == null) {
           _scores[id] = 0;
         }
-        playersRef.doc(id).update({'score': _scores[id]});
+        await playersRef.doc(id).update({'score': _scores[id]});
       }
+      setState(() {
+        _showCorrect = correct;
+      });
+      await gameRef.update({'answers': []});
+      await Future.delayed(const Duration(seconds: 5));
+      setState(() {
+        _showCorrect = null;
+      });
       _nextQuestion();
     } else {
       final scores = _scores.entries.toList();
@@ -243,6 +255,19 @@ class _HostScreenState extends State<HostScreen> {
           child: Text(questions[currentQuestion].question,
               textScaleFactor: 3, textAlign: TextAlign.center),
         );
+        final showCorrect = _showCorrect;
+        if (showCorrect != null) {
+          final correctNames = showCorrect.isEmpty ? "Nobody" : showCorrect.humanReadable;
+          body = Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            body,
+            Text("$correctNames correctly chose:", textScaleFactor: 2),
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Text(questions[currentQuestion].answers[questions[currentQuestion].correctIndex!],
+                  textScaleFactor: 3, textAlign: TextAlign.center),
+            )
+          ]);
+        }
       } else {
         final restartEnabled = _newQuestions != null;
         // Show results
@@ -291,7 +316,7 @@ class _HostScreenState extends State<HostScreen> {
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             final players = snapshot.data?.docs ?? List.empty();
-            final startEnabled = questions != null && players.isNotEmpty;
+            final startEnabled = questions != null && questions.isNotEmpty && players.isNotEmpty;
             final List<Widget> header = [
               const SelectableText(
                 _hostedUrl,
