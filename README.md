@@ -6,7 +6,7 @@ This is an attempt to recreate a similar experience to games such as You Don't K
 The primary purpose is as a learning experience for creating this type of game, but it
 should also be fun to play.
 
-A hosted version of this repository can be found at: https://trivia.mens.ly
+A hosted version of this repository can be found at: [trivia.mens.ly](https://trivia.mens.ly)
 
 ## TODO
 * [x] case insensitive code input

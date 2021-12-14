@@ -23,8 +23,8 @@ async function isOccupied(code) {
   if (!doc.exists) {
     return false;
   }
-  const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
-  return doc.get("lastAlive") > Date.now() - ONE_WEEK;
+  const ONE_DAY = 1000 * 60 * 60 * 24;
+  return doc.get("lastAlive") > Date.now() - ONE_DAY * 3;
 }
 
 exports.startGame = functions.https.onRequest(async (req, res) => {

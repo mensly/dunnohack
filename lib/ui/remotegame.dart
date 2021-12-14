@@ -11,6 +11,7 @@ class RemoteGameScreen extends StatefulWidget {
 }
 
 class _RemoteGameScreenState extends State<RemoteGameScreen> {
+  static const _timeout = 30000;
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
   var _connecting = false;
@@ -18,6 +19,34 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   DocumentReference? _gameRef;
   Stream<DocumentSnapshot>? _game;
   Stream<DocumentSnapshot>? _player;
+  bool _active = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnection();
+  }
+
+  @override
+  void dispose() {
+    _active = false;
+    super.dispose();
+  }
+
+  void _checkConnection() async {
+    while (_active) {
+      final gameRef = _gameRef;
+      if (gameRef != null) {
+        final gameSnapshot = await gameRef.get();
+        final int lastAlive = gameSnapshot.get("lastAlive");
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now > lastAlive + _timeout) {
+          _disconnect();
+        }
+      }
+      await Future.delayed(const Duration(seconds: 10));
+    }
+  }
 
   void _disconnect() {
     setState(() {

@@ -34,12 +34,20 @@ class _HostScreenState extends State<HostScreen> {
     Difficulty.medium,
     Difficulty.hard
   ];
+  bool _active = true;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
     _startGame();
+    _keepAlive();
+  }
+
+  @override
+  void dispose() {
+    _active = false;
+    super.dispose();
   }
 
   void _loadCategories() async {
@@ -155,6 +163,21 @@ class _HostScreenState extends State<HostScreen> {
             .toList();
       });
       _loadQuestions(restart: true);
+    }
+  }
+
+  void _keepAlive() async {
+    while (_active) {
+      if (_code != null) {
+        final gameRef = FirebaseFirestore.instance.collection('games').doc(
+            _code);
+        await gameRef.update({
+          'lastAlive': DateTime
+              .now()
+              .millisecondsSinceEpoch
+        });
+      }
+      await Future.delayed(const Duration(seconds: 1));
     }
   }
 
