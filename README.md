@@ -20,4 +20,5 @@ A hosted version of this repository can be found at: [dunnohack-opentdb.web.app]
 * [ ] Show correct answer after everyone answers
 * [ ] Show points as you go
 * [ ] Show who answered what
+* [ ] Custom question json
 * [ ] Single player config
