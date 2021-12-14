@@ -21,6 +21,6 @@ A hosted version of this repository can be found at: [trivia.mens.ly](https://tr
 * [ ] Show correct answer after everyone answers
 * [x] Show points as you go
 * [ ] Show who answered what
-* [ ] Custom question json
+* [x] Custom question json
 * [ ] Single player config
 * [x] GitHub link

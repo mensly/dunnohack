@@ -196,7 +196,13 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.appTitle),
+        title: _player == null ? Text(context.appTitle) : StreamBuilder<DocumentSnapshot>(
+            stream: _player,
+            builder: (BuildContext context,
+                AsyncSnapshot<DocumentSnapshot> playerSnapshot) {
+              final int? score = playerSnapshot.data?.get("score");
+              return Text(score == null ? context.appTitle : "${context.appTitle} - $score");
+            }),
         actions: _gameRef == null
             ? []
             : [
@@ -208,13 +214,6 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                           style: TextStyle(color: Colors.white)),
                     ))
               ],
-        flexibleSpace: StreamBuilder<DocumentSnapshot>(
-            stream: _player,
-            builder: (BuildContext context,
-                AsyncSnapshot<DocumentSnapshot> playerSnapshot) {
-              final score = playerSnapshot.data?.get("score");
-              return Text(score == null ? "" : score.toString());
-            }),
       ),
       body: Center(child: body),
     );

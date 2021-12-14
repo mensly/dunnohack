@@ -131,6 +131,20 @@ class _HostScreenState extends State<HostScreen> {
     _loadQuestions();
   }
 
+  void _restart() async {
+    _currentQuestion = null;
+    _scores.clear();
+    _scoresDisplay = null;
+    _nextQuestion();
+
+    final gameRef = FirebaseFirestore.instance.collection('games').doc(_code);
+    final playersRef = gameRef.collection('players');
+    final players = await playersRef.get();
+    for (final player in players.docs) {
+      await playersRef.doc(player.id).update({'score': null});
+    }
+  }
+
   void _nextQuestion() async {
     if (_newQuestions != null) {
       _questions = _newQuestions;
@@ -257,11 +271,7 @@ class _HostScreenState extends State<HostScreen> {
                     padding: const EdgeInsets.all(8.0),
                     child: MaterialButton(
                       onPressed: restartEnabled
-                          ? () {
-                              _currentQuestion = null;
-                              _scores.clear();
-                              _nextQuestion();
-                            }
+                          ? () => _restart()
                           : null,
                       color: restartEnabled
                           ? context.theme.primaryColor
