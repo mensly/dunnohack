@@ -6,19 +6,21 @@ This is an attempt to recreate a similar experience to games such as You Don't K
 The primary purpose is as a learning experience for creating this type of game, but it
 should also be fun to play.
 
-A hosted version of this repository can be found at: [dunnohack-opentdb.web.app](https://dunnohack-opentdb.web.app)
+A hosted version of this repository can be found at: https://trivia.mens.ly
 
 ## TODO
-* [ ] case insensitive code input
-* [ ] show url for input
-* [ ] better UI for waiting 
-* [ ] input validation
+* [x] case insensitive code input
+* [x] show url for input
+* [x] better UI for waiting
+* [x] input validation
 * [ ] Session rejoin
+* [ ] Host remove players during setup
 * [ ] Show who we're waiting on
 * [ ] Timeout for answering
 * [ ] Show how many questions you're on
 * [ ] Show correct answer after everyone answers
-* [ ] Show points as you go
+* [x] Show points as you go
 * [ ] Show who answered what
 * [ ] Custom question json
 * [ ] Single player config
+* [x] GitHub link

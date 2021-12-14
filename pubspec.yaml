@@ -14,9 +14,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  font_awesome_flutter: ^9.2.0
   html_character_entities: ^1.0.0+1
   http: ^0.13.4
   rxdart: ^0.27.2
+  url_launcher: ^6.0.17
 
 dev_dependencies:
   flutter_test:

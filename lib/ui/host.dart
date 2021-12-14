@@ -16,7 +16,9 @@ class HostScreen extends StatefulWidget {
 }
 
 class _HostScreenState extends State<HostScreen> {
+  static const _hostedUrl = "trivia.mens.ly";
   List<Question>? _questions;
+  List<Question>? _newQuestions;
   String? _code;
   Object? _error;
   int? _currentQuestion;
@@ -47,15 +49,23 @@ class _HostScreenState extends State<HostScreen> {
     });
   }
 
-  void _loadQuestions() async {
+  void _loadQuestions({bool restart = false}) async {
     setState(() {
-      _questions = null;
+      if (restart) {
+        _newQuestions = null;
+      } else {
+        _questions = null;
+      }
     });
     try {
       final questions =
           await Api.loadQuestions(category: _category, difficulty: _difficulty);
       setState(() {
-        _questions = questions;
+        if (restart) {
+          _newQuestions = questions;
+        } else {
+          _questions = questions;
+        }
       });
     } catch (e) {
       setState(() {
@@ -92,6 +102,10 @@ class _HostScreenState extends State<HostScreen> {
   }
 
   void _nextQuestion() async {
+    if (_newQuestions != null) {
+      _questions = _newQuestions;
+      _newQuestions = null;
+    }
     final currentQuestion = (_currentQuestion ?? -1) + 1;
     final questions = _questions;
     if (questions != null && currentQuestion < questions.length) {
@@ -105,6 +119,7 @@ class _HostScreenState extends State<HostScreen> {
         await playersRef.doc(player.id).update({'input': null});
       }
       await gameRef.update({
+        'question': questions[currentQuestion].question,
         'answers': questions[currentQuestion].answers,
         'lastAlive': DateTime.now().millisecondsSinceEpoch
       });
@@ -122,6 +137,7 @@ class _HostScreenState extends State<HostScreen> {
         } else if (_scores[id] == null) {
           _scores[id] = 0;
         }
+        playersRef.doc(id).update({'score': _scores[id]});
       }
       _nextQuestion();
     } else {
@@ -138,6 +154,7 @@ class _HostScreenState extends State<HostScreen> {
                 '${players.docs.firstWhere((element) => element.id == entry.key).get('name')}: ${entry.value}')
             .toList();
       });
+      _loadQuestions(restart: true);
     }
   }
 
@@ -165,9 +182,13 @@ class _HostScreenState extends State<HostScreen> {
       ]);
     } else if (questions != null && currentQuestion != null) {
       if (currentQuestion < questions.length) {
-        body = Text(questions[currentQuestion].question,
-            textScaleFactor: 3, textAlign: TextAlign.center);
+        body = Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text(questions[currentQuestion].question,
+              textScaleFactor: 3, textAlign: TextAlign.center),
+        );
       } else {
+        final restartEnabled = _newQuestions != null;
         // Show results
         body = Column(
             children: [
@@ -183,12 +204,34 @@ class _HostScreenState extends State<HostScreen> {
                         ?.map((e) => Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                e,
+                                "$e / ${questions.length}",
                                 textScaleFactor: 4,
                               ),
                             ))
                         .toList() ??
-                    List.empty()));
+                    List.empty()) +
+                [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: MaterialButton(
+                      onPressed: restartEnabled
+                          ? () {
+                              _currentQuestion = null;
+                              _scores.clear();
+                              _nextQuestion();
+                            }
+                          : null,
+                      color: restartEnabled
+                          ? context.theme.primaryColor
+                          : Colors.grey.shade300,
+                      textColor: Colors.white,
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text("Play Again", textScaleFactor: 3),
+                      ),
+                    ),
+                  )
+                ]);
       }
     } else if (code != null && players != null) {
       body = StreamBuilder<QuerySnapshot>(
@@ -198,9 +241,13 @@ class _HostScreenState extends State<HostScreen> {
             final players = snapshot.data?.docs ?? List.empty();
             final startEnabled = questions != null && players.isNotEmpty;
             final List<Widget> header = [
+              const SelectableText(
+                _hostedUrl,
+                textScaleFactor: 4,
+              ),
               SelectableText(
                 code,
-                textScaleFactor: 4,
+                textScaleFactor: 5,
               ),
               Text("Players:" + (players.isEmpty ? ' None' : ''))
             ];
