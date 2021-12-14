@@ -171,7 +171,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                         playerSnapshot.data!.get('input') != null;
                     if (answers.isNotEmpty && !playerAnswered) {
                       return ListView.builder(
-                          itemCount: answers.length + 1,
+                          itemCount: answers.length + 2,
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return Padding(
@@ -180,6 +180,15 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                                       gameSnapshot.data?.get("question") ?? "",
                                       textScaleFactor: 2,
                                       textAlign: TextAlign.center));
+                            }
+                            if (index == answers.length + 1) {
+                              final int? score = playerSnapshot.data?.get("score");
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 4.0, top: 32.0),
+                                child: Text(score == null ? "" : "Score: $score",
+                                  textScaleFactor: 2,
+                                  textAlign: TextAlign.end),
+                              );
                             }
                             return MaterialButton(
                               onPressed: () => {_submitAnswer(index - 1)},
@@ -204,13 +213,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: _player == null ? Text(context.appTitle) : StreamBuilder<DocumentSnapshot>(
-            stream: _player,
-            builder: (BuildContext context,
-                AsyncSnapshot<DocumentSnapshot> playerSnapshot) {
-              final int? score = playerSnapshot.data?.get("score");
-              return Text(score == null ? context.appTitle : "${context.appTitle} — Score: $score");
-            }),
+        title: Text(context.appTitle),
         actions: _gameRef == null
             ? []
             : [

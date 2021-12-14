@@ -413,9 +413,10 @@ class _HostScreenState extends State<HostScreen> {
       // Loading questions and code
       body = const CircularProgressIndicator();
     }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_currentQuestion == null ? context.appTitle :
+        title: Text(_currentQuestion == null || _currentQuestion == _questions?.length ? context.appTitle :
           "${context.appTitle} — Question ${_currentQuestion! + 1} of ${_questions?.length ?? 0}") ,
       ),
       body: Center(child: body),
