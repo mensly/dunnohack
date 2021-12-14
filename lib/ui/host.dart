@@ -19,6 +19,7 @@ class _HostScreenState extends State<HostScreen> {
   static const _hostedUrl = "trivia.mens.ly";
   List<Question>? _questions;
   List<Question>? _newQuestions;
+  var _customQuestions = false;
   String? _code;
   Object? _error;
   int? _currentQuestion;
@@ -34,7 +35,7 @@ class _HostScreenState extends State<HostScreen> {
     Difficulty.medium,
     Difficulty.hard
   ];
-  bool _active = true;
+  var _active = true;
 
   @override
   void initState() {
@@ -79,6 +80,27 @@ class _HostScreenState extends State<HostScreen> {
       setState(() {
         _error = e;
       });
+    }
+  }
+
+  void _loadCustomQuestions() async {
+    setState(() {
+      _questions = null;
+    });
+    try {
+      final questions = await Api.uploadQuestions();
+      if (questions.isNotEmpty) {
+        setState(() {
+          _questions = questions;
+          _customQuestions = true;
+        });
+      } else {
+        // Fallback to previous
+        _loadQuestions();
+      }
+    } catch (e) {
+      // Fallback to previous
+      _loadQuestions();
     }
   }
 
@@ -169,13 +191,10 @@ class _HostScreenState extends State<HostScreen> {
   void _keepAlive() async {
     while (_active) {
       if (_code != null) {
-        final gameRef = FirebaseFirestore.instance.collection('games').doc(
-            _code);
-        await gameRef.update({
-          'lastAlive': DateTime
-              .now()
-              .millisecondsSinceEpoch
-        });
+        final gameRef =
+            FirebaseFirestore.instance.collection('games').doc(_code);
+        await gameRef
+            .update({'lastAlive': DateTime.now().millisecondsSinceEpoch});
       }
       await Future.delayed(const Duration(seconds: 1));
     }
@@ -282,8 +301,10 @@ class _HostScreenState extends State<HostScreen> {
                 items: _difficulties
                     .map((difficulty) => DropdownMenuItem(
                         value: difficulty,
-                        child: Text(
-                            difficulty?.toLabelString() ?? "Any Difficulty")))
+                        child: Text(_customQuestions
+                            ? "CUSTOM"
+                            : (difficulty?.toLabelString() ??
+                                "Any Difficulty"))))
                     .toList(),
                 onChanged: (Difficulty? newValue) {
                   setState(() {
@@ -297,7 +318,9 @@ class _HostScreenState extends State<HostScreen> {
                 items: _categories
                     .map((category) => DropdownMenuItem(
                         value: category,
-                        child: Text(category?.name ?? "Any Category")))
+                        child: Text(_customQuestions
+                            ? "CUSTOM"
+                            : (category?.name ?? "Any Category"))))
                     .toList(),
                 onChanged: (Category? newValue) {
                   setState(() {
@@ -321,6 +344,22 @@ class _HostScreenState extends State<HostScreen> {
                   child: const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text("Start", textScaleFactor: 3),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: MaterialButton(
+                  onPressed: () => _loadCustomQuestions(),
+                  color: context.theme.primaryColor,
+                  textColor: Colors.white,
+                  child: const Padding(
+                    padding: EdgeInsets.all(1.0),
+                    child: Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Text("Custom Question JSON\n(Advanced)",
+                          textAlign: TextAlign.center,),
+                    ),
                   ),
                 ),
               )

@@ -19,7 +19,7 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
   DocumentReference? _gameRef;
   Stream<DocumentSnapshot>? _game;
   Stream<DocumentSnapshot>? _player;
-  bool _active = true;
+  var _active = true;
 
   @override
   void initState() {
@@ -167,10 +167,11 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(gameSnapshot.data?.get("question") ?? "",
-                                    textScaleFactor: 2, textAlign: TextAlign.center)
-                              );
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                      gameSnapshot.data?.get("question") ?? "",
+                                      textScaleFactor: 2,
+                                      textAlign: TextAlign.center));
                             }
                             return MaterialButton(
                               onPressed: () => {_submitAnswer(index - 1)},
@@ -196,14 +197,17 @@ class _RemoteGameScreenState extends State<RemoteGameScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.appTitle),
-        actions: _gameRef == null ? [] : [
-          Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: TextButton(
-                onPressed: () => _disconnect(),
-                child: const Text("DISCONNECT", style: TextStyle(color: Colors.white)),
-              ))
-        ],
+        actions: _gameRef == null
+            ? []
+            : [
+                Padding(
+                    padding: const EdgeInsets.only(right: 20.0),
+                    child: TextButton(
+                      onPressed: () => _disconnect(),
+                      child: const Text("DISCONNECT",
+                          style: TextStyle(color: Colors.white)),
+                    ))
+              ],
         flexibleSpace: StreamBuilder<DocumentSnapshot>(
             stream: _player,
             builder: (BuildContext context,
